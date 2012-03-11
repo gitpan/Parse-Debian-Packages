@@ -1,6 +1,6 @@
 use strict;
 package Parse::Debian::Packages;
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 sub new {
     my $class = shift;
@@ -16,7 +16,7 @@ sub next {
     my %parsed;
     while (<$fh>) {
         last if /^$/;
-        if (my ($key, $value) = m/^(.*): (.*)/) {
+        if (my ($key, $value) = m/^(\S+): (.*)/) {
             $parsed{$key} = $value;
         }
         else {
@@ -27,6 +27,17 @@ sub next {
     }
 
     return %parsed;
+}
+
+sub as_hash {
+    my $class = shift;
+    my $parser = $class->new(@_);
+    my %hash;
+
+    while (my %package = $parser->next) {
+        $hash{ $package{Package} } = \%package;
+    }
+    return \%hash;
 }
 
 1;
@@ -59,13 +70,27 @@ will return the next package found in the file.
 For laziness, we take a filehandle in to the constructor.  Please open
 the file for us.
 
+=head1 METHODS
+
+=head2 new( $filehandle )
+
+=head2 next
+
+Iterate to the next package in the file, returns either a hash
+containing a package description, or false at end of file.
+
+=head2 as_hash( $filehandle )
+
+Return all the packages from a filehandle as a hash of hashes.
+
 =head1 AUTHOR
 
-Richard Clamp <richardc@unixbeard.net>
+Richard Clamp <richardc@unixbeard.net> with as_hash implementation by
+Thomas Klausner.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2003 Richard Clamp.  All Rights Reserved.
+Copyright (C) 2003,2005,2012 Richard Clamp.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
